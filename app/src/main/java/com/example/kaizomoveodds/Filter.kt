@@ -16,17 +16,23 @@ fun filter(
 ): Array<Move> {
     val filteredMoves = mutableListOf<Move>()
     val encounteredNames = HashSet<String>()
+    val att:Int = if (pow == 0){
+        1
+    }else{
+        pow
+    }
 
     for (x in types) {
         if (x.first) {
             val movesOfType = arr.filter {
-                (it.type == x.second && it.Att >= pow && it.Acc >= acc) ||
-                        (it.type == x.second && it.Att >= pow && it.Acc == 0) ||
+                (it.type == x.second && it.Att >= att && it.Acc >= acc) ||
+                        (it.type == x.second && it.Att >= att && it.Acc == 0) ||
                         (it.type == x.second && goodMove(it.name))
             }.filterNot {
-                it.name == "Explosion" || it.name == "Selfdestruct" || it.name == "Spit Up" ||
+                 isUseless(it.name) ||
                         (!recoil && isRecoil(it.name))||(!reCharge && isRecharge(it.name))||
-                        (!twoTurn&& isTwoTurn(it.name))||(!confuse&& isConfuse(it.name))
+                        (!twoTurn&& isTwoTurn(it.name))||(!confuse&& isConfuse(it.name))||
+                        removedMove(it.name)
             }
 
             for (move in movesOfType) {
@@ -118,4 +124,21 @@ fun goodMove(move:String):Boolean{
         "Low Kick"-> true
         else -> false
     }
+}
+fun isUseless(move:String):Boolean{
+    return when(move){
+        "Explosion"-> true
+        "Selfdestruct" -> true
+        "Spit Up" -> true
+        "Snore" -> true
+        else -> false
+    }
+}
+fun removedMove(move:String):Boolean{
+    for (x in removedMoves){
+        if (x.name == move){
+            return true
+        }
+    }
+    return false
 }

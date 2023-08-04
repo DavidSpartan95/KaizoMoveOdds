@@ -3,6 +3,7 @@ package com.example.kaizomoveodds
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,10 +14,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -44,7 +49,9 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun App() {
 
-
+    var withIn by remember { mutableStateOf(1) }
+    var delete by remember { mutableStateOf(false) }
+    var badge by remember { mutableStateOf(1) }
     var reset  by remember { mutableStateOf(false) }
     var pow  by remember { mutableStateOf(0) }
     var acc  by remember { mutableStateOf(0) }
@@ -83,11 +90,12 @@ fun App() {
             )
         )
     }
-    LaunchedEffect(reset){
+    LaunchedEffect(reset,){
         if (reset){
             moveArr = movesArray
             reset = false
         }
+
     }
     Column(Modifier.fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
 
@@ -96,7 +104,7 @@ fun App() {
                 Modifier
                     .weight(1f)
             ) {
-                LazyVerticalGrid(columns = GridCells.Fixed(3)){
+                LazyVerticalGrid(columns = GridCells.Fixed(4)){
                     items(types.size){
                             index ->
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -252,7 +260,7 @@ fun App() {
         Row(Modifier.fillMaxWidth(),horizontalArrangement = Arrangement.SpaceEvenly) {
             Button(
                 onClick = {
-                    moveArr = filter(types, moveArr,pow,acc,atk,spAtk,speed,recoil,reCharge,twoTurn,confuse)
+                    moveArr = filter(types, moveArr,pow,acc,atk,spAtk,speed,recoil,reCharge,twoTurn,confuse,)
                     filter = true
                 },
             ) {
@@ -263,6 +271,7 @@ fun App() {
                     filter = false
                     reset = true
                     moveArr = movesArray
+                    removedMoves = arrayListOf()
                 },
             ) {
                 Text(text = "BACK")
@@ -271,17 +280,45 @@ fun App() {
         if (filter) {
             var odds: Double = (moveArr.size.toDouble()/(movesArray.size+10-learnedMovesNum))
             var oddsProcent = odds*100
-            var odds2 = String.format("%.2f",oddsWithinX(odds,moveArr.size,learnedMovesNum,2))
+            var odds2 = String.format("%.2f",oddsWithinX(moveArr.size,learnedMovesNum,withIn))
+            var tmOdds = String.format("%.2f",tmOddsWithinX(moveArr.size,badge))
             val formattedNumber = String.format("%.2f", oddsProcent)
+
+            Box() {
+                Row(horizontalArrangement = Arrangement.Center,verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = "WhitIn lvlUP?")
+                    IconButton(onClick = { withIn-- }) {
+                        Image(painter = painterResource(id = R.drawable.remove_circle), contentDescription = null)
+                    }
+                    Text(text = "$withIn")
+                    IconButton(onClick = { withIn++ }) {
+                        Icon(Icons.Default.AddCircle, contentDescription = "Back")
+                    }
+                }
+                Row(Modifier.padding(top = 20.dp),horizontalArrangement = Arrangement.Center,verticalAlignment = Alignment.CenterVertically,) {
+                    Text(text = "WhitIn Badges?")
+                    IconButton(onClick = { badge-- }) {
+                        Image(painter = painterResource(id = R.drawable.remove_circle), contentDescription = null)
+                    }
+                    Text(text = "$badge")
+                    IconButton(onClick = { badge++ }) {
+                        Icon(Icons.Default.AddCircle, contentDescription = "Back")
+                    }
+                }
+            }
             Text(text = "$formattedNumber % of moves match")
-            Text(text = "$odds2 % to get at least 1 move within 2 tries")
-            MoveList(moveArr)
+            Text(text = "$odds2 % to get at least 1 move within $withIn lvlUP")
+            Text(text = "$tmOdds % to get at least 1 move from $badge TMs")
+            MoveList(moveArr){
+                moveArr = filter(types, moveArr,pow,acc,atk,spAtk,speed,recoil,reCharge,twoTurn,confuse,)
+                //delete = true
+            }
         }
     }
 }
 
 @Composable
-fun MoveList(moves:Array<Move>) {
+fun MoveList(moves:Array<Move>, delete:()-> Unit) {
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.fillMaxSize()
@@ -292,7 +329,8 @@ fun MoveList(moves:Array<Move>) {
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     text = "${move.name} Att${move.Att} Acc${accConvert(move.Acc)}",
@@ -302,6 +340,12 @@ fun MoveList(moves:Array<Move>) {
                         .padding(1.dp)
                         .background(typeColor.first, shape = RoundedCornerShape(4.dp))
                 )
+                IconButton(onClick = {
+                    removedMoves.add(move)
+                    delete.invoke()
+                }) {
+                    Icon(Icons.Default.Delete, contentDescription = "Back")
+                }
             }
         }
     }
@@ -313,19 +357,33 @@ fun accConvert(acc:Int):String{
     }else acc.toString()
 }
 
-fun oddsWithinX(odds:Double,goodMoves:Int ,movesLearned:Int,withIn:Int):Double{
-    var oddsToNotLearnMove = 1-odds
-    var movesL = movesLearned
+fun oddsWithinX(goodMoves:Int ,movesLearned:Int,withIn:Int):Double{
+    var oddsToNotLearnMove = 1.0
+    var movesL = 0
     var roll = withIn
     //var odds: Double = (moveArr.size.toDouble()/(movesArray.size+10-4))*100
     while (roll > 0){
         val tossOdds = 1-(goodMoves.toDouble()/(movesArray.size+10-movesL))
-        println(tossOdds)
+        movesL++
         oddsToNotLearnMove *= tossOdds
-        println(oddsToNotLearnMove)
         roll--
     }
     return (1 - oddsToNotLearnMove)*100
+}
+
+fun tmOddsWithinX(goodMoves:Int ,withIn:Int):Double{
+    var oddsToNotLearnMove = 1.0
+    var movesL = 0
+    var roll = withIn
+    //var odds: Double = (moveArr.size.toDouble()/(movesArray.size+10-4))*100
+    while (roll > 0){
+        val tossOdds = 1-(goodMoves.toDouble()/(movesArray.size+10-movesL))
+        movesL++
+        oddsToNotLearnMove *= tossOdds
+        roll--
+    }
+    println(movesArray.size+10)
+    return ((1 - oddsToNotLearnMove)*100)/2
 }
 
 

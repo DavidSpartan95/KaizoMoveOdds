@@ -380,8 +380,10 @@ val movesArray = arrayOf(
     Move("WATER", "Water Spout", 5, 150, 100, "Inflicts more damage if the user's HP is high."),
     //Move("WATER", "Waterfall", 15, 80, 100, "Charges the foe with speed to climb waterfalls."),
     Move("WATER", "Whirlpool", 15, 15, 70, "Traps and hurts the foe in a whirlpool for 2 to 5 turns."),
-    Move("WATER", "Withdraw", 40, 0, 0, "Withdraws the body into its hard shell to raise DEFENSE.")
-
+    Move("WATER", "Withdraw", 40, 0, 0, "Withdraws the body into its hard shell to raise DEFENSE."),
+    Move("???", "Curse", 10, 0, 0, "A move that functions differently for GHOSTS..")
 
 )
+
+var removedMoves = arrayListOf<Move>()
 

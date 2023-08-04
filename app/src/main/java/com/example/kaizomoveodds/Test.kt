@@ -14,29 +14,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-@Composable
-fun Test() {
-    Column(Modifier.fillMaxSize()) {
-        Column(
-            Modifier
-                .heightIn(100.dp)
-                .verticalScroll(rememberScrollState())) {
-            Text(text = "Hello")
-        }
-
-        LazyVerticalGrid(columns = GridCells.Fixed(3)){
-            items(movesArray.size){
-                    index ->
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(
-                        selected = false,
-                        onClick = {
-
-                        }
-                    )
-                    Text(text = movesArray[index].name, modifier = Modifier.padding(start = 8.dp))
-                }
-            }
-        }
+fun isPhysical(type:String): Boolean{
+    return when(type){
+        "BUG" -> true
+        "FIGHT" -> true
+        "FLYING" -> true
+        "GROUND" -> true
+        "GHOST" -> true
+        "NORMAL" -> true
+        "POISON" -> true
+        "ROCK" -> true
+        "STEEL" -> true
+        else -> false
     }
+
 }

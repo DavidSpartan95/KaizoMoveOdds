@@ -62,31 +62,38 @@ fun App() {
     var recoil  by remember { mutableStateOf(false) }
     var reCharge  by remember { mutableStateOf(false) }
     var twoTurn  by remember { mutableStateOf(false) }
-    var confuse  by remember { mutableStateOf(false) }
+    var lockInMove  by remember { mutableStateOf(false) }
+    var sleep: Boolean by remember { mutableStateOf(false) }
+    var confuse:Boolean by remember { mutableStateOf(false) }
+    var poison:Boolean by remember { mutableStateOf(false) }
+    var burn: Boolean by remember { mutableStateOf(false) }
 
     var filter: Boolean by remember { mutableStateOf(false) }
     var moveArr by remember { mutableStateOf(movesArray) }
 
-    var types: Array<Pair<Boolean,String>> by remember {
+    var types: Array<Triple<Boolean, String, Int>> by remember {
         mutableStateOf(
             arrayOf(
-                Pair(false, "BUG"),
-                Pair(false, "DARK"),
-                Pair(false, "DRAGON"),
-                Pair(false, "Electric"),
-                Pair(false, "FIGHT"),
-                Pair(false, "FIRE"),
-                Pair(false, "FLYING"),
-                Pair(false, "GHOST"),
-                Pair(false, "GRASS"),
-                Pair(false, "GROUND"),
-                Pair(false, "ICE"),
-                Pair(false, "NORMAL"),
-                Pair(false, "POISON"),
-                Pair(false, "PSYCHIC"),
-                Pair(false, "ROCK"),
-                Pair(false, "STEEL"),
-                Pair(false, "WATER")
+                Triple(false, "BUG", R.drawable.bug),
+                Triple(false, "DARK", R.drawable.dark),
+                Triple(false, "DRAGON", R.drawable.dragon),
+                Triple(false, "Electric", R.drawable.electric),
+                Triple(false, "FIGHT", R.drawable.fighting),
+                Triple(false, "FIRE", R.drawable.fire),
+                Triple(false, "FLYING", R.drawable.flying),
+                Triple(false, "GHOST", R.drawable.ghost),
+                Triple(false, "GRASS", R.drawable.grass),
+                Triple(false, "GROUND", R.drawable.ground),
+                Triple(false, "ICE", R.drawable.ice),
+                Triple(false, "NORMAL", R.drawable.normal),
+                Triple(false, "POISON", R.drawable.poison),
+                Triple(false, "PSYCHIC", R.drawable.psychic),
+                Triple(false, "ROCK", R.drawable.rock),
+                Triple(false, "STEEL", R.drawable.steel),
+                Triple(false, "WATER", R.drawable.water),
+                Triple(false, "physical", R.drawable.physical),
+                Triple(false, "special", R.drawable.special),
+
             )
         )
     }
@@ -111,12 +118,38 @@ fun App() {
                             RadioButton(
                                 selected = types[index].first,
                                 onClick = {
-                                    val updatedTypes = types.toMutableList()
-                                    updatedTypes[index] = Pair(!types[index].first, types[index].second)
+                                    var updatedTypes = types.toMutableList()
+                                    updatedTypes[index] = Triple(!types[index].first, types[index].second,types[index].third)
                                     types = updatedTypes.toTypedArray()
+                                    if (types[index].second == "physical"){
+                                        var i = 0
+                                        while (i < 17){
+                                            if (isPhysical(types[i].second)){
+                                                updatedTypes = types.toMutableList()
+                                                updatedTypes[i] = Triple(types[index].first, types[i].second,types[i].third)
+                                                types = updatedTypes.toTypedArray()
+                                            }
+                                            i++
+                                        }
+                                    }
+                                    if (types[index].second == "special"){
+                                        var i = 0
+                                        while (i < 17){
+                                            if (!isPhysical(types[i].second)){
+                                                updatedTypes = types.toMutableList()
+                                                updatedTypes[i] = Triple(types[index].first, types[i].second,types[i].third)
+                                                types = updatedTypes.toTypedArray()
+                                            }
+                                            i++
+                                        }
+                                    }
                                 }
                             )
-                            Text(text = types[index].second, modifier = Modifier.padding(start = 8.dp))
+                            //Text(text = types[index].second, modifier = Modifier.padding(start = 8.dp))
+                            Image(
+                                painter = painterResource(id = types[index].third),
+                                contentDescription = "",
+                                Modifier.size(50.dp),)
                         }
                     }
                 }
@@ -241,10 +274,51 @@ fun App() {
                                 }
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     RadioButton(
+                                        selected = lockInMove,
+                                        onClick = {lockInMove = !lockInMove}
+                                    )
+                                    Text(text = "2-3/5 turn lock")
+                                }
+                            }
+
+                        }
+                    }
+                    Column(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(top = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(text = "STATUS MOVES")
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column() {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    RadioButton(
+                                        selected = sleep,
+                                        onClick = {sleep = !sleep}
+                                    )
+                                    Text(text = "Sleep")
+                                }
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    RadioButton(
                                         selected = confuse,
                                         onClick = {confuse = !confuse}
                                     )
-                                    Text(text = "2-3/5 turn lock")
+                                    Text(text = "Confuse")
+                                }
+                            }
+                            Column() {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    RadioButton(
+                                        selected = poison,
+                                        onClick = {poison = !poison}
+                                    )
+                                    Text(text = "Poison")
+                                }
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    RadioButton(
+                                        selected = burn,
+                                        onClick = {burn = !burn}
+                                    )
+                                    Text(text = "Burn")
                                 }
                             }
 
@@ -260,7 +334,7 @@ fun App() {
         Row(Modifier.fillMaxWidth(),horizontalArrangement = Arrangement.SpaceEvenly) {
             Button(
                 onClick = {
-                    moveArr = filter(types, moveArr,pow,acc,atk,spAtk,speed,recoil,reCharge,twoTurn,confuse,)
+                    moveArr = filter(types, moveArr,pow,acc,atk,spAtk,speed,recoil,reCharge,twoTurn,lockInMove,sleep,confuse,poison,burn)
                     filter = true
                 },
             ) {
@@ -306,12 +380,11 @@ fun App() {
                     }
                 }
             }
-            Text(text = "$formattedNumber % of moves match")
+            Text(text = "${moveArr.size} moves ($formattedNumber %) match")
             Text(text = "$odds2 % to get at least 1 move within $withIn lvlUP")
             Text(text = "$tmOdds % to get at least 1 move from $badge TMs")
             MoveList(moveArr){
-                moveArr = filter(types, moveArr,pow,acc,atk,spAtk,speed,recoil,reCharge,twoTurn,confuse,)
-                //delete = true
+                moveArr = filter(types, moveArr,pow,acc,atk,spAtk,speed,recoil,reCharge,twoTurn,lockInMove,sleep,confuse,poison,burn)
             }
         }
     }
